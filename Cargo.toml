@@ -1,7 +1,19 @@
 [package]
 name = "ToolTweaker"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
+keywords = ["automation", "tools", "installer"]
+categories = ["command-line-utilities"]
+description = "A tool to automatically install tweaked versions of applications!"
+repository = "https://github.com/CattoYT/ToolTweaker"
+readme = "README.md"
+license-file = "LICENSE"
+
 
 [dependencies]
 clap = { version = "4.5.20", features = ["derive"] }
+trauma = "2.2.5"
+tokio = { version = "1.41.1", features = ["rt", "macros"] }
+zip = "2.2.0"
+zip-extract = "0.2.1"
+encoding_rs = "0.8"
