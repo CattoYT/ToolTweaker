@@ -88,6 +88,10 @@ fn main() {
                 println!("Enabling spicetify functionality");
                 linux::install_spicetify();
             }
+            if cli.spotx {
+                println!("Installing SpotX...");
+                linux::install_spotx();
+            }
         }
         _ => {
             println!("Unsupported OS");

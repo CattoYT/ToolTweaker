@@ -44,3 +44,12 @@ pub fn install_spicetify() {
 
     let _ = spicetify_install_cmd.wait();
 }
+
+pub fn install_spotx() {
+    let mut spotx_install_cmd = std::process::Command::new("bash")
+        .arg("\"<(curl -sSL https://spotx-official.github.io/run.sh)\"")
+        .spawn()
+        .expect("wtf");
+
+    let _ = spotx_install_cmd.wait(); // account for the user not having the perl, unzip, and zip
+}
