@@ -153,12 +153,12 @@ pub fn install_spotx() {
 
                 }
             }
-            Err(err) => {
+            _ => {
                 //i dont care,
         }
     }}
 
-
+    let _ = spotx_cmd.wait();
 
 }
 use tokio::runtime::Runtime;
@@ -166,7 +166,7 @@ use tokio::runtime::Runtime;
 pub fn install_soggfy() {
     use std::fs;
 
-    let _ = match fs::create_dir("./soggfy") {
+    match fs::create_dir("./soggfy") {
         Ok(()) => {
             println!("Created directory:" );
         },
@@ -263,7 +263,7 @@ fn remove_pause_from_script(file_path: &Path) -> std::io::Result<()> {
     
     // Read lines except the last "Pause" if it exists
     let mut lines: Vec<String> = reader.lines()
-        .filter_map(|line| line.ok())
+        .map_while(Result::ok)
         .collect();
 
     // Check if the last line is "Pause" and remove it

@@ -1,6 +1,7 @@
 use clap::ArgAction;
 use clap::Parser;
 
+mod linux;
 mod windows;
 #[derive(Parser)]
 #[command(name = "tltw")]
@@ -27,9 +28,7 @@ struct Cli {
     #[arg(long, short='g', action = ArgAction::SetTrue)]
     soggfy: bool,
 }
-
 fn main() {
-
     let cli = Cli::parse();
 
     let mut nomatch = false;
@@ -38,29 +37,27 @@ fn main() {
     }
     if !nomatch {
         println!("No arguments were set. Use --help for more information");
-        return
+        return;
     }
 
     match std::env::consts::OS {
         "windows" => {
-
             if cli.removeall {
                 println!("Removing tweaks...");
                 windows::remove_all_spotify_tweaks();
                 // https://raw.githubusercontent.com/SpotX-Official/SpotX/refs/heads/main/Uninstall.bat run this
-                return
+                return;
             }
             if cli.all {
                 println!("Adding all tweaks to Spotify");
-                
+
                 windows::install_soggfy();
                 println!("Adding spotx to Spotify");
                 windows::install_spotx();
                 println!("Applying spicetify to Spotify");
                 windows::install_spicetify();
 
-                
-                return
+                return;
             }
 
             //really specific order dw about it (this also restricts the spotify version to 1.2.31.1205-x86_32)
@@ -70,32 +67,30 @@ fn main() {
             } else {
                 println!("Skipping soggfy installation");
             }
+
             if cli.spotx {
                 println!("Adding spotx to Spotify");
                 windows::install_spotx();
             } else {
                 println!("Skipping spotx installation");
             }
-            
+
             if cli.spicetify {
                 println!("Applying spicetify to Spotify");
-                let _ = windows::install_spicetify();
+                windows::install_spicetify();
             } else {
                 println!("Skipping spicetify installation");
             }
-
-
         }
-        
+
         "linux" => {
             if cli.spicetify {
                 println!("Enabling spicetify functionality");
-                todo!("Implement spicetify for linux");
+                linux::install_spicetify();
             }
         }
         _ => {
             println!("Unsupported OS");
         }
     }
-
 }

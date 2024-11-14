@@ -1,56 +1,46 @@
-use std::env;
-use std::process::Command;
+use std::io::Write;
+use std::process::Stdio;
 
-fn main() {
-    let args: Vec<String> = env::args().collect();
-    match std::env::consts::OS {
-        "windows" => {
-            
-        }
-        _ => todo!()
-    }
+pub fn install_spicetify() {
+    // This is designed for arch with spotify + yay specifically.
 
-    let spicetify_cmd = Command::new("spicetify")
-        .arg("apply")
-        .output()
-        .expect("failed to execute process"
-    );
+    // Install spicetify over yay
 
-    for arg in args.iter().skip(1) {
-        match arg.as_str() {
-            "--premium" => {
-                println!("Skipping spotx!");
-            },
-            _ => {
-                println!("");
-                let spotx_cmd = Command::new("spotx")
-                .arg("")
-                
-                .output()
-                .expect("failed to execute process");
-                println!("Running spotx");
-                print!("{}", String::from_utf8_lossy(&spotx_cmd.stdout));
+    let mut install_necessary = false;
+    match std::process::Command::new("spicetify").arg("apply").spawn() {
+        Ok(_) => println!("Executable found!"),
+        Err(e) => {
+            if e.kind() == std::io::ErrorKind::NotFound {
+                install_necessary = true;
+                println!("Spicetify not found. Installing...");
+            } else {
+                panic!("WHAT THE FUCK DID YOU DO?");
             }
         }
-
     }
 
+    if install_necessary {
+        let spicetify = std::process::Command::new("yay")
+            .arg("-S")
+            .arg("--noconfirm")
+            .arg("spicetify-cli")
+            .stdin(Stdio::piped()) // Allow input
+            .stdout(Stdio::piped()) // Allow input
+            .spawn()
+            .expect("failed to exspecute process");
 
-
-    println!("Running spicetify");
-    let spicetify_output = String::from_utf8_lossy(&spicetify_cmd.stdout);
-    print!("{}", spicetify_output);
-    // check if there is the "warning" substring inside of spicetify_output
-    if spicetify_output.contains("spicetify backup apply") {
-        println!("Spicetify failed! Rerunning with backup...");
-        let spicetify_backup_cmd = Command::new("spicetify")
-            .arg("backup")
-            .arg("apply")
-            .output()
-            .expect("failed to execute process");
-            
-        print!("{}", String::from_utf8_lossy(&spicetify_backup_cmd.stdout));
-    } else {
-        println!("Spicetify has been applied successfully");
+        let _ = spicetify.wait_with_output();
     }
+
+    let mut spicetify_install_cmd = std::process::Command::new("spicetify")
+        .arg("apply")
+        .stdin(Stdio::piped())
+        .spawn()
+        .expect("ermmm");
+    if let Some(ref mut stdin) = spicetify_install_cmd.stdin {
+        // yeet y for the spicetify marketplace to be installed
+        writeln!(stdin, "y").expect("Failed to write to stdin");
+    }
+
+    let _ = spicetify_install_cmd.wait();
 }
