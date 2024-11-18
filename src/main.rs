@@ -24,6 +24,9 @@ struct Cli {
     #[arg(long, short='x', action = ArgAction::SetTrue)]
     spotx: bool,
 
+    #[arg(long, short='p', action = ArgAction::SetTrue)]
+    premium_spotify: bool,
+
     /// Add soggfy to Spotify (WINDOWS ONLY!!) This will also use an outdated, x86_32 version of spotify
     #[arg(long, short='g', action = ArgAction::SetTrue)]
     soggfy: bool,
@@ -90,7 +93,7 @@ fn main() {
             }
             if cli.spotx {
                 println!("Installing SpotX...");
-                linux::install_spotx();
+                linux::install_spotx(cli.premium_spotify);
             }
         }
         _ => {

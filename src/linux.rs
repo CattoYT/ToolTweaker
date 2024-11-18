@@ -45,11 +45,31 @@ pub fn install_spicetify() {
     let _ = spicetify_install_cmd.wait();
 }
 
-pub fn install_spotx() {
-    let mut spotx_install_cmd = std::process::Command::new("bash")
-        .arg("\"<(curl -sSL https://spotx-official.github.io/run.sh)\"")
+pub fn install_spotx(premium : bool) {
+    
+    let mut spotx_install_cmd;
+    if premium {
+        spotx_install_cmd =  std::process::Command::new("bash")
+        .arg("-c")
+        .arg("bash <(curl -k -sSL https://spotx-official.github.io/run.sh) -p -P /opt/spotify/")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
         .spawn()
-        .expect("wtf");
+        .expect("wtf");// again, arch only.
+    } else {
+        spotx_install_cmd = std::process::Command::new("bash")
+        .arg("-c")
+        .arg("bash <(curl -k -sSL https://spotx-official.github.io/run.sh) -P /opt/spotify/")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
+        .expect("wtf");// again, arch only.
+    }
+    
 
+    if let Some(ref mut stdin) = spotx_install_cmd.stdin {
+        // yeet y for the spicetify marketplace to be installed
+        writeln!(stdin, "a").expect("Failed to write to stdin");
+    }
     let _ = spotx_install_cmd.wait(); // account for the user not having the perl, unzip, and zip
 }
