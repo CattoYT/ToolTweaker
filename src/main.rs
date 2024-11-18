@@ -1,12 +1,14 @@
 use clap::ArgAction;
 use clap::Parser;
+use figlet_rs::FIGfont;
 
 mod linux;
 mod windows;
 #[derive(Parser)]
-#[command(name = "tltw")]
-#[command(version = "1.0")]
-#[command(about = "The stupidest installer for all sorts of tweaks!", long_about = None)]
+#[command(name = "ToolTweaker")]
+#[command(version = "1.0.2")]
+#[command(about = FIGfont::standard().unwrap().convert("ToolTweaker").unwrap().to_string()+
+"The stupidest installer for all sorts of tweaks!", long_about = None)]
 struct Cli {
     /// Removes all tweaks from Spotify
     #[arg(long, short='r', action = ArgAction::SetTrue)]
@@ -23,7 +25,7 @@ struct Cli {
     /// Patch Spotify with spotx
     #[arg(long, short='x', action = ArgAction::SetTrue)]
     spotx: bool,
-
+    /// Apply Premium patches to SpotX
     #[arg(long, short='p', action = ArgAction::SetTrue)]
     premium_spotify: bool,
 
@@ -39,8 +41,7 @@ fn main() {
         nomatch = true;
     }
     if !nomatch {
-        println!("No arguments were set. Use --help for more information");
-        return;
+        <Cli as clap::CommandFactory>::command().print_help().unwrap();        return;
     }
 
     match std::env::consts::OS {
