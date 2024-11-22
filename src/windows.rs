@@ -1,4 +1,4 @@
-use std::{io::{BufRead, BufReader, Error}, path::Path, process::Stdio, thread};
+use std::{io::{BufRead, BufReader, Error, Read}, path::Path, process::Stdio, thread};
 
 use std::io::Write;
 
@@ -11,16 +11,33 @@ use std::io::Write;
 
 
 pub fn remove_all_spotify_tweaks(){
-    let _ = std::process::Command::new(
-        "powershell")
-        .arg("-NonInteractive")
-        .arg("-Command")
-        
-        .arg("spicetify restore ; rmdir -r -fo $env:APPDATA\\spicetify; rmdir -r -fo $env:LOCALAPPDATA\\spicetify
-    ")
-        .spawn()
-        .expect("failed to exspecute process").wait();
-    
+    println!("Do you want to fully wipe spicetify? <y/n> ");
+    let input = std::io::stdin().lock().lines().next().unwrap().unwrap();
+    if input == "y" {
+        println!("Removing spicetify and all its files...");
+        let _ = std::process::Command::new(
+            "powershell")
+            .arg("-NonInteractive")
+            .arg("-Command")
+            
+            .arg("spicetify restore ; rmdir -r -fo $env:APPDATA\\spicetify; rmdir -r -fo $env:LOCALAPPDATA\\spicetify
+        ")
+            .spawn()
+            .expect("failed to exspecute process").wait();
+    } else {
+        println!("Removing spicetify...");
+        let _ = std::process::Command::new(
+            "powershell")
+            .arg("-NonInteractive")
+            .arg("-Command")
+            
+            .arg("spicetify restore ;
+        ")
+            .spawn()
+            .expect("failed to exspecute process").wait();
+    }
+
+    println!("Removed spicetify");
     let _ = std::process::Command::new(
         "powershell")
         .arg("-NonInteractive")
@@ -29,6 +46,8 @@ pub fn remove_all_spotify_tweaks(){
        
     ").spawn()
     .expect("failed to exspecute process").wait();
+    println!("Attempted to remove SpotX. This sometimes doesn't work so just reinstall spotify!");
+
 
     let _ = remove_pause_from_script(Path::new(&(std::env::var("TEMP").unwrap() + "\\Uninstall.bat")));
     
@@ -37,8 +56,8 @@ pub fn remove_all_spotify_tweaks(){
         .arg("-NonInteractive")
         .arg("-Command")
         .arg(" & \"$env:TEMP\\Uninstall.bat\" ;
-        Remove-Item \"$env:TEMP\\Uninstall.bat\" -Force 
-    ").spawn()
+        Remove-Item \"$env:TEMP\\Uninstall.bat\" -Force ").spawn()
+        
         .expect("failed to exspecute process").wait();
     
     match std::fs::remove_file(std::env::var("APPDATA").unwrap() + "\\Spotify\\dpapi.dll") {
@@ -55,6 +74,7 @@ pub fn remove_all_spotify_tweaks(){
         Ok(_) => (),
         Err(e) => eprintln!("Failed to remove Soggfy directory: {}", e),
     }
+    println!("Removed Soggfy");
 
 }
 
@@ -122,7 +142,82 @@ pub fn install_spicetify() {
         },
     }
 
-    println!("Running spicetify"); 
+    println!("Running spicetify");
+    {
+        let mut spicetify_ensure_install = std::process::Command::new(
+            "spicetify")
+            .arg("apply")
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+
+        .spawn()
+        .expect("failed to execute process");
+
+        let stdin = spicetify_ensure_install.stdin.as_mut().expect("Failed to open stdin");
+        let stdout = spicetify_ensure_install.stdout.take().expect("Failed to capture stdout");
+        let mut reader = BufReader::new(stdout);
+
+        let mut buffer = String::new();
+        let mut prev_line = String::new();
+
+        loop {
+
+            match reader.read_line(&mut buffer) {
+                Ok(0) => break, // Exit the loop if EOF is reached
+                Ok(_) => {
+                    let trimmed = buffer.trim_end();
+                
+                    // Skip if the line is the same as the previous one
+                    if trimmed == prev_line {
+                        continue;
+                    }
+                    prev_line = trimmed.to_string();
+                
+                    // Print the current line
+                    println!("Output: {}", trimmed);
+                
+                    // Handle specific conditions
+                    if trimmed.contains("Please run \"spicetify backup apply\"") {
+                        writeln!(stdin, "n").expect("Failed to write 'n' to stdin");
+                        install_spicetify_backup(&spicetify_dir);
+
+
+                        break; // Exit the loop
+                    }
+
+                }
+                Err(err) => {
+                    eprintln!("Error reading line: {}", err);
+                    break; // Exit on error to avoid infinite loop
+                }
+            } 
+        }
+    }
+}
+
+fn install_spicetify_backup(spicetify_dir: &String) {
+    let mut spicetify_backup_cmd = std::process::Command::new(&spicetify_dir)
+    .arg("backup")
+    .arg("apply")
+
+    .stdout(Stdio::piped())
+    .spawn()
+    .expect("failed to execute process");
+
+    let stdout = spicetify_backup_cmd.stdout.take();
+
+    let output_thread = thread::spawn(move || {
+        let reader = BufReader::new(stdout.unwrap());
+        let mut error_file = std::fs::File::create("spicetify_backup.log").unwrap();
+        //thanks copilot
+        error_file.write_all(reader.lines().map(|line| line.unwrap()).collect::<Vec<String>>().join("\n").as_bytes()).unwrap();
+        
+    });
+    
+
+
+let _ = spicetify_backup_cmd.wait().expect("Failed to wait for process");
+output_thread.join().expect("Output thread panicked");
 }
 
 pub fn install_spotx() {
@@ -213,28 +308,44 @@ pub fn install_soggfy() {
 
     let stdin = soggfy_install_cmd.stdin.as_mut().expect("Failed to open stdin");
     let stdout = soggfy_install_cmd.stdout.take().expect("Failed to capture stdout");
-    let reader = BufReader::new(stdout);
+    let mut reader = BufReader::new(stdout);
 
-
+    let mut buffer = String::new();
+    let mut prev_line = String::new();
     // Read each line from stdout as it’s generated
-    for line in reader.lines() {
-        match line {
-            Ok(line) => {
-                println!("Output: {}", line); // Optional: print each line to track progress
+    loop {
 
-                if line.contains("Do you want to install SpotX?") {
-
-                    writeln!(stdin, "n").expect("Failed to write 'n' to stdin");
-
+    
+        // Read a line from the subprocess
+        match reader.read_line(&mut buffer) {
+            Ok(0) => break, // Exit the loop if EOF is reached
+            Ok(_) => {
+                let trimmed = buffer.trim_end();
+    
+                // Skip if the line is the same as the previous one
+                if trimmed == prev_line {
+                    continue;
                 }
-                if line.contains("1205") {
+                prev_line = trimmed.to_string();
+    
+                // Print the current line
+                println!("Output: {}", trimmed);
+    
+                // Handle specific conditions
+                if trimmed.contains("Do you want to install SpotX?") {
+                    writeln!(stdin, "n").expect("Failed to write 'n' to stdin");
+                    break; // Exit the loop
+                }
+                if trimmed.contains("1205") {
                     writeln!(stdin, "y").expect("Failed to write 'y' to stdin");
                 }
             }
-            Err(err) => eprintln!("Error reading line: {}", err),
+            Err(err) => {
+                eprintln!("Error reading line: {}", err);
+                break; // Exit on error to avoid infinite loop
+            }
         }
     }
-
     // Wait for the command to finish
     let _ = soggfy_install_cmd.wait().expect("Failed to wait for process");
  
