@@ -1,9 +1,22 @@
-# ToolTweaker
-
-A small rust app made to install Soggify, Spicetify, and SpotX. 
-
+```
+  _____                   _   _____                             _   
+ |_   _|   ___     ___   | | |_   _| __      __   ___    __ _  | | __   ___   _ __   
+   | |    / _ \   / _ \  | |   | |   \ \ /\ / /  / _ \  / _` | | |/ /  / _ \ | '__|   
+   | |   | (_) | | (_) | | |   | |    \ V  V /  |  __/ | (_| | |   <  |  __/ | |   
+   |_|    \___/   \___/  |_|   |_|     \_/\_/    \___|  \__,_| |_|\_\  \___| |_|   
+```
+A small rust app made to install Soggify, Spicetify, and SpotX, completely automatically!   
+   
 ## Usage:
-Run ```ToolTweaker.exe -h``` for all of the available commands!
+Options:   
+  -r, --removeall        Removes all tweaks from Spotify   
+  -a, --all              Adds all tweaks from Spotify   
+  -s, --spicetify        Enable spicetify functionality   
+  -x, --spotx            Patch Spotify with spotx   
+  -p, --premium-spotify  Apply Premium patches to SpotX   
+  -g, --soggfy           Add soggfy to Spotify (WINDOWS ONLY!!) This will also use an outdated, x86_32 version of spotify   
+  -h, --help             Print help   
+  -V, --version          Print version   
 
 Made for Hack Club's Rust YSWS and High Seas!
 
