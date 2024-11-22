@@ -5,8 +5,19 @@
    | |   | (_) | | (_) | | |   | |    \ V  V /  |  __/ | (_| | |   <  |  __/ | |   
    |_|    \___/   \___/  |_|   |_|     \_/\_/    \___|  \__,_| |_|\_\  \___| |_|   
 ```
-A small rust app made to install Soggify, Spicetify, and SpotX, completely automatically!   
-   
+A small rust cli app made to install Soggify, Spicetify, and SpotX, completely automatically!   
+
+## Installation:
+Run the following using cargo:   
+```cargo install ToolTweaker```
+
+Or build from source:
+```
+git clone https://github.com/CattoYT/ToolTweaker
+cd ToolTweaker
+cargo build --release
+```
+
 ## Usage:
 Options:   
   -r, --removeall        Removes all tweaks from Spotify   
